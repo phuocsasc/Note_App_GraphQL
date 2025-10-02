@@ -6,11 +6,13 @@ import bodyParser from "body-parser";
 import { expressMiddleware } from "@apollo/server/express4";
 import cors from "cors";
 import mongoose from "mongoose";
+
 import dotenv from "dotenv";
 dotenv.config();
-
 import { typeDefs } from "./schemas/index.js";
 import { resolvers } from "./resolvers/index.js";
+import "./firebaseConfig.js";
+import { getAuth } from "firebase-admin/auth";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -29,7 +31,38 @@ const server = new ApolloServer({
 
 await server.start();
 
-app.use(cors(), bodyParser.json(), expressMiddleware(server));
+const authorizationJWT = async (req, res, next) => {
+    const authorizationHeader = req.headers.authorization;
+    console.log("authorizationHeader:", authorizationHeader);
+
+    if (authorizationHeader) {
+        const accessToken = authorizationHeader.split(" ")[1];
+
+        getAuth()
+            .verifyIdToken(accessToken)
+            .then((decodedToken) => {
+                console.log("Decoded Token:", decodedToken);
+                // req.user = decodedToken; yTwQ7vrBQfPu38n6tufopWIIWQo1
+                res.locals.uid = decodedToken.uid;
+                next();
+            })
+            .catch((error) => {
+                console.error("Error verifying token:", error);
+                return res.status(403).json({ error: "Forbidden" });
+            });
+    } else {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
+};
+
+app.use(
+    cors(),
+    authorizationJWT,
+    bodyParser.json(),
+    expressMiddleware(server, {
+        context: async ({ req, res }) => ({ uid: res.locals.uid }),
+    }),
+);
 
 mongoose
     .connect(URL, { useNewUrlParser: true, useUnifiedTopology: true })

@@ -5,8 +5,11 @@ import { AuthorModel } from "../models/index.js";
 
 export const resolvers = {
     Query: {
-        folders: async () => {
-            const folders = await FolderModel.find();
+        folders: async (parent, args, context) => {
+            const folders = await FolderModel.find({
+                authorId: context.uid,
+            }).sort({ updatedAt: "desc" });
+            console.log({ folders, context });
             return folders;
         },
         folder: async (parent, args) => {
@@ -22,10 +25,12 @@ export const resolvers = {
         },
     },
     Folder: {
-        author: (parent, args) => {
-            console.log({ parent, args });
+        author: async (parent, args) => {
             const authorId = parent.authorId;
-            return fakeData.authors.find((author) => author.id === authorId);
+            const author = await AuthorModel.findOne({
+                uid: authorId,
+            });
+            return author;
         },
         notes: (parent, args) => {
             // console.log({ parent }); // folder vừa mới trả về sau khi Click
@@ -33,11 +38,25 @@ export const resolvers = {
         },
     },
     Mutation: {
-        addFolder: async (parent, args) => {
-            const newFolder = new FolderModel({ ...args, authorId: "1" });
+        addNote: async (parent, args) => {
+            const newNote = new NoteModel(args);
+            await newNote.save();
+            return newNote;
+        },
+        addFolder: async (parent, args, context) => {
+            const newFolder = new FolderModel({ ...args, authorId: context.uid });
             console.log({ newFolder });
             await newFolder.save();
             return newFolder;
+        },
+        register: async (parent, args) => {
+            const foundUser = await AuthorModel.findOne({ uid: args.uid });
+            if (!foundUser) {
+                const newUser = new AuthorModel(args);
+                await newUser.save();
+                return newUser;
+            }
+            return foundUser;
         },
     },
 };

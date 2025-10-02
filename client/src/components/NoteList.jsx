@@ -1,13 +1,13 @@
-import { Box, Card, CardContent, Grid, List, Typography } from '@mui/material';
-import React, { useState } from 'react';
-import { Link, Outlet, useParams, useLoaderData } from 'react-router-dom';
+import { Box, Card, CardContent, Grid, List, Typography } from "@mui/material";
+import React, { useState } from "react";
+import { Link, Outlet, useParams, useLoaderData } from "react-router-dom";
 
 export default function NoteList() {
     const { noteId } = useParams();
     const [activeNoteId, setActiveNoteId] = useState(noteId);
     const { folder } = useLoaderData();
 
-    console.log('NoteList:', { folder });
+    console.log("NoteList:", { folder });
 
     // const folder = {
     //     notes: [{ id: '1', content: '<p>This is new note </p>' }],
@@ -18,21 +18,19 @@ export default function NoteList() {
                 item
                 xs={4}
                 sx={{
-                    width: '100%',
-                    maxWidth: '360px',
-                    bgcolor: '#f0ebe3',
-                    height: '100%',
-                    overflowY: 'auto',
-                    padding: '10px',
-                    textAlign: 'left',
+                    width: "100%",
+                    maxWidth: "360px",
+                    bgcolor: "#f0ebe3",
+                    height: "100%",
+                    overflowY: "auto",
+                    padding: "10px",
+                    textAlign: "left",
                 }}
             >
                 <List
                     subheader={
                         <Box>
-                            <Typography sx={{ fontWeight: 'bold' }}>
-                                Notes
-                            </Typography>
+                            <Typography sx={{ fontWeight: "bold" }}>Notes</Typography>
                         </Box>
                     }
                 >
@@ -41,34 +39,28 @@ export default function NoteList() {
                             <Link
                                 key={id}
                                 to={`note/${id}`}
-                                style={{ textDecoration: 'none' }}
+                                style={{ textDecoration: "none" }}
                                 onClick={() => setActiveNoteId(id)}
                             >
                                 <Card
                                     sx={{
-                                        mb: '5px',
-                                        backgroundColor:
-                                            id === activeNoteId
-                                                ? 'rgb(255 211 140)'
-                                                : null,
+                                        mb: "5px",
+                                        backgroundColor: id === activeNoteId ? "rgb(255 211 140)" : null,
                                     }}
                                 >
                                     <CardContent
                                         sx={{
-                                            '&:last-child': { pd: '10px' },
-                                            padding: '10px',
+                                            "&:last-child": { pd: "10px" },
+                                            padding: "10px",
                                         }}
                                     >
                                         <div
                                             style={{
                                                 fontSize: 14,
-                                                fontWeight: 'bold',
+                                                fontWeight: "bold",
                                             }}
                                             dangerouslySetInnerHTML={{
-                                                __html: `${
-                                                    content.substring(0, 30) ||
-                                                    'Empty'
-                                                }`,
+                                                __html: `${content.substring(0, 30) || "Empty"}`,
                                             }}
                                         />
                                     </CardContent>
