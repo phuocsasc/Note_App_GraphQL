@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { ContentState, convertFromHTML, convertToRaw, EditorState } from 'draft-js';
-import { Editor } from 'react-draft-wysiwyg';
-import { draftToHtml } from 'draftjs-to-html';
-import { useLoaderData } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from "react";
+import { ContentState, convertFromHTML, convertToRaw, EditorState } from "draft-js";
+import { Editor } from "react-draft-wysiwyg";
+import draftToHtml from "draftjs-to-html";
+import { useLoaderData, useSubmit, useLocation } from "react-router-dom";
+import { debounce } from "@mui/material";
 
 export default function Note() {
     const { note } = useLoaderData();
@@ -10,15 +11,25 @@ export default function Note() {
         return EditorState.createEmpty();
     });
     const [rawHTML, setRawHTML] = useState(note.content);
+    const submit = useSubmit();
+    const location = useLocation();
 
     useEffect(() => {
         const blocksFromHTML = convertFromHTML(note.content);
-        const state = ContentState.createFromBlockArray(
-            blocksFromHTML.contentBlocks,
-            blocksFromHTML.entityMap,
-        );
+        const state = ContentState.createFromBlockArray(blocksFromHTML.contentBlocks, blocksFromHTML.entityMap);
         setEditorState(EditorState.createWithContent(state));
     }, [note.id]);
+
+    useEffect(() => {
+        debounceMemorize(rawHTML, note, location.pathname);
+    }, [rawHTML, location.pathname]);
+
+    const debounceMemorize = useMemo(() => {
+        return debounce((rawHTML, note, pathname) => {
+            if (rawHTML === note.content) return;
+            submit({ ...note, content: rawHTML }, { method: "post", pathname });
+        }, 1000);
+    }, [submit]);
 
     useEffect(() => {
         setRawHTML(note.content);
@@ -30,10 +41,6 @@ export default function Note() {
     };
 
     return (
-        <Editor
-            editorState={editorState}
-            onEditorStateChange={handleOnChange}
-            placeholder="Write something!"
-        ></Editor>
+        <Editor editorState={editorState} onEditorStateChange={handleOnChange} placeholder="Write something!"></Editor>
     );
 }
