@@ -6,6 +6,9 @@ import bodyParser from "body-parser";
 import { expressMiddleware } from "@apollo/server/express4";
 import cors from "cors";
 import mongoose from "mongoose";
+import { makeExecutableSchema } from "@graphql-tools/schema";
+import { WebSocketServer } from "ws";
+import { useServer } from "graphql-ws/lib/use/ws";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -21,12 +24,32 @@ const httpServer = http.createServer(app);
 const URL = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.ldplopi.mongodb.net/`;
 const PORT = process.env.PORT || 4000;
 
-// schema
-// resolver
+const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+// Create WebSocket server
+const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: "/graphql",
+});
+
+const serverCleanup = useServer({ schema }, wsServer);
+
 const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    // typeDefs,
+    // resolvers,
+    schema,
+    plugins: [
+        ApolloServerPluginDrainHttpServer({ httpServer }),
+        {
+            async serverWillStart() {
+                return {
+                    async drainServer() {
+                        await serverCleanup.dispose();
+                    },
+                };
+            },
+        },
+    ],
 });
 
 await server.start();
@@ -51,7 +74,8 @@ const authorizationJWT = async (req, res, next) => {
                 return res.status(403).json({ error: "Forbidden" });
             });
     } else {
-        return res.status(401).json({ error: "Unauthorized" });
+        next();
+        // return res.status(401).json({ error: "Unauthorized" });
     }
 };
 
