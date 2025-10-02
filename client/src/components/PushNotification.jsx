@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import NotificationIcon from "@mui/icons-material/Notifications";
+import NotificationsIcon from "@mui/icons-material/Notifications";
 import { createClient } from "graphql-ws";
 import { GRAPHQL_SUBSCRIPTION_ENDPOINT } from "../utils/constants";
 import { Badge, Menu, MenuItem } from "@mui/material";
@@ -9,7 +9,7 @@ const client = createClient({
 });
 
 const query = `subscription PushNotification {
-    notification {
+  notification {
     message
   }
 }`;
@@ -38,9 +38,9 @@ export default function PushNotification() {
             const onNext = (data) => {
                 setInvisible(false);
 
-                const message = data?.notification?.message;
+                const message = data?.data?.notification?.message;
                 setNotification(message);
-                console.log("PushNotification", { data });
+                console.log("[PUSH NOTIFICATION]", { data });
             };
 
             await new Promise((resolve, reject) => {
@@ -60,8 +60,14 @@ export default function PushNotification() {
 
     return (
         <>
-            <Badge color="secondary" variant="dot" invisible={invisible} overlap="circular">
-                <NotificationIcon onClick={handleClick} />
+            <Badge
+                color="error"
+                variant="dot"
+                invisible={invisible}
+                overlap="circular"
+                sx={{ "&:hover": { cursor: "pointer" }, ml: "5px" }}
+            >
+                <NotificationsIcon onClick={handleClick} sx={{ color: "#7D9D9C" }} />
             </Badge>
             <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
                 <MenuItem onClick={handleClose}>{notification}</MenuItem>
