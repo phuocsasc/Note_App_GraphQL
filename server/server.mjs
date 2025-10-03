@@ -92,8 +92,8 @@ mongoose
     .connect(URL, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(async () => {
         console.log("🚀 Connected to the database");
-        await new Promise((resolve) => httpServer.listen({ port: PORT }, resolve));
-        console.log(`🚀 Server ready at http://localhost:${PORT}`);
+        await new Promise((resolve) => httpServer.listen(PORT, "0.0.0.0", resolve));
+        console.log(`🚀 Server ready at port ${PORT}`);
     })
     .catch((error) => {
         console.error("Error connecting to the database:", error);
